@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>あなたには絶対この作品！007診断</title>
+
+<style>
+:root{
+  --bg:#0b0f17;
+  --card:rgba(18,24,38,0.85);
+  --text:rgba(255,255,255,0.97);
+  --muted:rgba(255,255,255,0.80);
+  --line:rgba(255,255,255,0.18);
+  --accent:#e11d48;
+  --accent2:#22c55e;
+  --shadow:0 18px 50px rgba(0,0,0,0.35);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP",sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+.bg{
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  background:
+    linear-gradient(180deg,rgba(0,0,0,0.35),rgba(0,0,0,0.55)),
+    url("https://commons.wikimedia.org/wiki/Special:FilePath/Daniel%20Craig%20-%20James%20Bond%20(48707836782).jpg?width=1600");
+  background-size:cover;
+  background-position:center;
+}
+.app{
+  width:min(980px,calc(100% - 28px));
+  margin:28px auto;
+}
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:22px;
+  box-shadow:var(--shadow);
+  padding:20px;
+}
+h1{margin-top:0}
+.question{
+  font-size:20px;
+  font-weight:700;
+}
+.choices{
+  margin-top:14px;
+  display:grid;
+  gap:10px;
+}
+.choice{
+  padding:14px;
+  border-radius:18px;
+  background:rgba(255,255,255,0.08);
+  border:1px solid var(--line);
+  cursor:pointer;
+}
+.choice:hover{
+  background:rgba(255,255,255,0.18);
+}
+.hidden{display:none}
+.result-title{
+  font-size:22px;
+  margin:10px 0;
+}
+.gallery{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px;
+  margin-top:14px;
+}
+.gallery img{
+  width:100%;
+  border-radius:14px;
+}
+@media(max-width:700px){
+  .gallery{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+
+<body>
+<div class="bg"></div>
+
+<div class="app">
+  <div class="card" id="quiz">
+    <h1>あなたには絶対この作品！007診断</h1>
+    <div class="question" id="question"></div>
+    <div class="choices" id="choices"></div>
+  </div>
+
+  <div class="card hidden" id="result">
+    <div class="result-type" id="resultType"></div>
+    <div class="result-title" id="resultTitle"></div>
+    <div id="resultText"></div>
+    <div class="gallery" id="gallery"></div>
+    <button onclick="location.reload()">もう一回やる</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {
+    q:"映画に一番求めるものは？",
+    c:[
+      {t:"切ない恋",r:"love"},
+      {t:"ハードな覚悟",r:"hard"},
+      {t:"映像スケール",r:"scale"},
+      {t:"洒落た会話",r:"smart"}
+    ]
+  },
+  {
+    q:"好きなボンド像は？",
+    c:[
+      {t:"誠実で不器用",r:"love"},
+      {t:"無骨でタフ",r:"hard"},
+      {t:"影を背負う",r:"scale"},
+      {t:"スマート",r:"smart"}
+    ]
+  }
+];
+
+const results = {
+  love:{
+    type:"純愛ストーリータイプ",
+    title:"007 The Living Daylights",
+    text:"あなたは派手さよりも心の温度を大切にする人。静かな覚悟と守る愛が交差するこの作品は、あなたの感性に深く刺さります。",
+    imgs:[
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Timothy%20Dalton%201987.jpg?width=800",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/James%20Bond%20Aston%20Martin%20DB5.jpg?width=800"
+    ]
+  },
+  hard:{
+    type:"硬派リアルタイプ",
+    title:"007 Casino Royale",
+    text:"勝利の代償を受け入れる強さを描いた一本。覚悟を重んじるあなたに最適です。",
+    imgs:[
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Daniel%20Craig%20-%20James%20Bond%20(48707836782).jpg?width=800"
+    ]
+  },
+  scale:{
+    type:"スケール重視タイプ",
+    title:"007 Skyfall",
+    text:"映像美と重厚なドラマが融合した作品。大きな余韻を求めるあなた向け。",
+    imgs:[
+      "https://commons.wikimedia.org/wiki/Special:FilePath/1963%20Aston%20Martin%20DB5%20(James%20Bond).jpg?width=800"
+    ]
+  },
+  smart:{
+    type:"スタイリッシュタイプ",
+    title:"007 GoldenEye",
+    text:"洗練と王道のバランスが魅力。大人の007を楽しみたいあなたに。",
+    imgs:[
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Pierce%20Brosnan%20(30608968065).jpg?width=800"
+    ]
+  }
+};
+
+let index=0;
+let score={love:0,hard:0,scale:0,smart:0};
+
+const qEl=document.getElementById("question");
+const cEl=document.getElementById("choices");
+
+function render(){
+  const q=questions[index];
+  qEl.textContent=q.q;
+  cEl.innerHTML="";
+  q.c.forEach(c=>{
+    const d=document.createElement("div");
+    d.className="choice";
+    d.textContent=c.t;
+    d.onclick=()=>{
+      score[c.r]++;
+      index++;
+      index<questions.length?render():showResult();
+    };
+    cEl.appendChild(d);
+  });
+}
+
+function showResult(){
+  document.getElementById("quiz").classList.add("hidden");
+  document.getElementById("result").classList.remove("hidden");
+
+  const key=Object.keys(score).sort((a,b)=>score[b]-score[a])[0];
+  const r=results[key];
+
+  document.getElementById("resultType").textContent=r.type;
+  document.getElementById("resultTitle").textContent=r.title;
+  document.getElementById("resultText").textContent=r.text;
+
+  const g=document.getElementById("gallery");
+  r.imgs.forEach(i=>{
+    const img=document.createElement("img");
+    img.src=i;
+    g.appendChild(img);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
